@@ -30,8 +30,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 python3 manage.py makemigrations
 python3 manage.py migrate
-python manage.py createsuperuser 
+python manage.py createsuperuser
 
+cd frontend
+npm install
 
 # run application
 cd backend
