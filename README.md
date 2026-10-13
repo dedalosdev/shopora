@@ -25,8 +25,9 @@ DB_HOST=localhost
 DB_PORT=5432
 
 cd backend
-pip install -r requirements.txt 
-
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
 python3 manage.py migrate
 
 # run application
