@@ -1,6 +1,19 @@
 # shopora
 Shopora is an open-source e-commerce platform featuring a React web interface, a React Native mobile app, a Python/Django/DjangoRestFramework backend and PostgreSQL database. Designed for learning, personal use, and commercial projects, it provides a flexible foundation for building and customizing online stores.
 
+## Included
+- `accounts`: customer profile and addresses
+- `catalog`: categories, products, variants and images
+- `inventory`: stock balances and movements
+- `cart`: shopping carts and items
+- `orders`: orders and order items
+- `payments`: payment records and provider webhooks
+- `shipping`: shipments
+- `coupons`: coupon validation and redemption
+- `notifications`: notification records
+- `storefront`: public store settings and banners
+- `common`: shared utilities and health endpoint
+
 # database settings
 psql postgres
 postgres=# create role postgres with login password 'yourpassword';
@@ -8,7 +21,7 @@ postgres=# alter role postgres with login password 'yourpassword';
 ALTER ROLE
 postgres=# alter role postgres superuser createdb createrole;
 ALTER ROLE
-postgres=# create database ecommerce_db owner postgres;
+postgres=# create database shopora_db owner postgres;
 CREATE DATABASE
 postgres=# \l
 postgres=# \q
@@ -18,7 +31,7 @@ git clone https://github.com/dedalosdev/shopora.git
 
 cd shopora
 create .env file
-DB_NAME=ecommerce_db
+DB_NAME=shopora_db
 DB_USER=postgres
 DB_PASSWORD=admin
 DB_HOST=localhost

@@ -30,6 +30,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Customized User class
+AUTH_USER_MODEL = "accounts.User"
 
 # Application definition
 
@@ -41,7 +43,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'store',
+    "rest_framework_simplejwt", 
+    "django_filters", 
+    "drf_spectacular",
+    "accounts", 
+    "catalog", "inventory", 
+    "cart", 
+    "orders",
+    "payments", 
+    "shipping", 
+    "coupons",
+    "notifications",
+    "storefront",
+    "common",
 ]
 
 MIDDLEWARE = [
@@ -124,11 +138,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / "media"
 
 STATIC_URL = 'static/'
 
+# REST_FRAMEWORK Configurations
+REST_FRAMEWORK = {
+ "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+ "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+ "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend", "rest_framework.filters.SearchFilter", "rest_framework.filters.OrderingFilter"],
+ "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+ "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+ "PAGE_SIZE": 20,
+}
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -142,3 +165,5 @@ MAILERS = {
 CORS_ALLOW_ALL_ORIGINS = [
     "http://localhost:3000",                   
 ]
+
+SPECTACULAR_SETTINGS = {"TITLE":"Shopora API", "DESCRIPTION":"REST API for the shopora platform", "VERSION":"1.0.0"}

@@ -15,15 +15,45 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from accounts.views import RegisterView, AddressViewSet, ProfileView
+from cart.views import CartView, CartItemViewSet
+from catalog.views import CategoryViewSet, ProductViewSet, ProductVariantViewSet
+from common.views import HealthView
+from coupons.views import CouponViewSet, CouponValidateView
+from inventory.views import InventoryViewSet, InventoryMovementViewSet
+from notifications.views import NotificationViewSet
+from orders.views import OrderViewSet
+from payments.views import PaymentViewSet, PaymentWebhookView
+from shipping.views import ShipmentViewSet
+from storefront.views import StoreSettingView, BannerViewSet
 
+router = DefaultRouter()
+router.register("categories", CategoryViewSet, basename="category")
+router.register("products", ProductViewSet, basename="product")
+router.register("variants", ProductVariantViewSet, basename="variant")
+router.register("inventory", InventoryViewSet, basename="inventory")
+router.register("inventory-movements", InventoryMovementViewSet, basename="inventory-movement")
+router.register("cart/items", CartItemViewSet, basename="cart-item")
+router.register("orders", OrderViewSet, basename="order")
+router.register("payments", PaymentViewSet, basename="payment")
+router.register("shipments", ShipmentViewSet, basename="shipment")
+router.register("coupons", CouponViewSet, basename="coupon")
+router.register("notifications", NotificationViewSet, basename="notification")
+router.register("banners", BannerViewSet, basename="banner")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('store.urls')),
+    path("admin/", admin.site.urls), path("api/v1/health/", HealthView.as_view()),
+    path("api/v1/auth/register/", RegisterView.as_view()), path("api/v1/auth/token/", TokenObtainPairView.as_view()),
+    path("api/v1/auth/token/refresh/", TokenRefreshView.as_view()), path("api/v1/auth/me/", ProfileView.as_view()),
+    path("api/v1/addresses/", AddressViewSet.as_view({"get":"list","post":"create"})),
+    path("api/v1/addresses/<int:pk>/", AddressViewSet.as_view({"get":"retrieve","patch":"partial_update","put":"update","delete":"destroy"})),
+    path("api/v1/cart/", CartView.as_view()), path("api/v1/coupons/validate/", CouponValidateView.as_view()),
+    path("api/v1/store/", StoreSettingView.as_view()), path("api/v1/webhooks/payments/<str:provider>/", PaymentWebhookView.as_view()),
+    path("api/v1/", include(router.urls)), path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
