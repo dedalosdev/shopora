@@ -29,13 +29,9 @@ postgres=# \q
 # instalation instructions
 git clone https://github.com/dedalosdev/shopora.git
 
-cd shopora
-create .env file
-DB_NAME=shopora_db
-DB_USER=postgres
-DB_PASSWORD=admin
-DB_HOST=localhost
-DB_PORT=5432
+cd shopora/backend
+cp .env.example .env
+Edit the database credentials
 
 cd backend
 virtualenv venv
@@ -56,6 +52,11 @@ npm run
 cd mobile
 npx expo start
 type 'a' key to run android emulator
+
+# URLs
+- `http://127.0.0.1:8000/api/v1/`: The API's urls
+- `http://127.0.0.1:8000/api/docs/`:The API documentation
+- `http://127.0.0.1:8000/admin/`: The administration interface
 
 ## License
 
