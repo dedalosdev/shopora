@@ -29,11 +29,10 @@ postgres=# \q
 # instalation instructions
 git clone https://github.com/dedalosdev/shopora.git
 
-cd shopora/backend
+cd shopora
+cd backend
 cp .env.example .env
 Edit the database credentials
-
-cd backend
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -42,13 +41,22 @@ python3 manage.py migrate
 python manage.py createsuperuser
 
 cd frontend
+cp .env.example .env
+Edit API URL
+npm install
+
+cd mobile
+cp .env.example .env
+Edit API URL
 npm install
 
 # run application
 cd backend
 python3 manage.py runserver
+
 cd frontend
 npm run
+
 cd mobile
 npx expo start
 type 'a' key to run android emulator

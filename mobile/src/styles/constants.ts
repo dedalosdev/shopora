@@ -1,0 +1,1 @@
+export const C = { ink:"#172126", muted:"#7A858B", line:"#E8EBE9", bg:"#F7F7F5", white:"#FFFFFF", soft:"#EEF0ED" };
