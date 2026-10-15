@@ -1,10 +1,12 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.db.models import signals
+from django.template.defaultfilters import slugify
 
 
 class Category(models.Model):
     name = models.CharField(max_length=120)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=100, blank=True, unique=True)
     description = models.TextField(blank=True)
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children")
     is_active = models.BooleanField(default=True)
@@ -21,7 +23,7 @@ class Category(models.Model):
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=100, blank=True, unique=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
@@ -61,3 +63,15 @@ class ProductImage(models.Model):
     class Meta: 
         ordering = ["position"]
         db_table = "product_image"
+
+
+def category_pre_save(signal, instance, sender, **kwargs):
+    instance.slug = slugify(instance.name)
+
+signals.pre_save.connect(category_pre_save, sender=Category)
+
+
+def product_pre_save(signal, instance, sender, **kwargs):
+    instance.slug = slugify(instance.name)
+
+signals.pre_save.connect(product_pre_save, sender=Product)

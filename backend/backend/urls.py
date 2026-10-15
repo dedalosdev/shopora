@@ -46,14 +46,20 @@ router.register("notifications", NotificationViewSet, basename="notification")
 router.register("banners", BannerViewSet, basename="banner")
 
 urlpatterns = [
-    path("admin/", admin.site.urls), path("api/v1/health/", HealthView.as_view()),
-    path("api/v1/auth/register/", RegisterView.as_view()), path("api/v1/auth/token/", TokenObtainPairView.as_view()),
-    path("api/v1/auth/token/refresh/", TokenRefreshView.as_view()), path("api/v1/auth/me/", ProfileView.as_view()),
+    path("admin/", admin.site.urls), 
+    path("api/v1/health/", HealthView.as_view()),
+    path("api/v1/auth/register/", RegisterView.as_view()), 
+    path("api/v1/auth/token/", TokenObtainPairView.as_view()),
+    path("api/v1/auth/token/refresh/", TokenRefreshView.as_view()), 
+    path("api/v1/auth/me/", ProfileView.as_view()),
     path("api/v1/addresses/", AddressViewSet.as_view({"get":"list","post":"create"})),
     path("api/v1/addresses/<int:pk>/", AddressViewSet.as_view({"get":"retrieve","patch":"partial_update","put":"update","delete":"destroy"})),
-    path("api/v1/cart/", CartView.as_view()), path("api/v1/coupons/validate/", CouponValidateView.as_view()),
-    path("api/v1/store/", StoreSettingView.as_view()), path("api/v1/webhooks/payments/<str:provider>/", PaymentWebhookView.as_view()),
-    path("api/v1/", include(router.urls)), path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/v1/cart/", CartView.as_view()), 
+    path("api/v1/coupons/validate/", CouponValidateView.as_view()),
+    path("api/v1/store/", StoreSettingView.as_view()), 
+    path("api/v1/webhooks/payments/<str:provider>/", PaymentWebhookView.as_view()),
+    path("api/v1/", include(router.urls)), 
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]
 
