@@ -27,9 +27,14 @@ class ProductImageAdmin(ModelAdmin):
 
     image_preview.short_description = "Product image"
     
+    
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = ("product__name", "sku", "price")
+       
+    
 
     
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
-admin.site.register(ProductVariant)
+admin.site.register(ProductVariant, ProductVariantAdmin)
 admin.site.register(ProductImage, ProductImageAdmin)
