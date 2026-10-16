@@ -148,7 +148,7 @@ export const styles = StyleSheet.create({
     },
     heroImage: {
         flex: .8,
-        minHeight: 200
+        height: 200
     },
     sectionHead: {
         flexDirection: "row",
