@@ -13,5 +13,5 @@ class PaymentSerializer(serializers.ModelSerializer):
         
 class CheckoutSerializer(serializers.Serializer):
     order_id = serializers.IntegerField()
-    provider = serializers.ChoiceField(choices=[("stripe","Stripe"),("asaas","Asaas")])
+    provider = serializers.ChoiceField(choices=[("asaas","Asaas")])
     method = serializers.ChoiceField(choices=[("pix","Pix"),("credit_card","Credit card")])

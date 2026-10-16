@@ -2,12 +2,18 @@ import React, { useMemo, useState, useEffect } from "react";
 import { SafeAreaView, ScrollView, View, Text, TextInput, Image, Pressable, Alert, StatusBar, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { C } from "./src/styles/constants";
-import { styles } from "./src/styles/styles";
+import { C } from "@/styles/constants";
+import { styles } from "@/styles/styles";
 
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { getProducts } from "@/services/productService";
 import { adaptProduct } from "@/services/productAdapter";
+import { createAddress,} from "@/services/addressService";
+import { createOrderFromCart,} from "@/services/orderService";
+import { addItemToBackendCart } from "./src/services/cartService";
 import type { ShoporaProduct } from "@/services/productAdapter";
+import { createPayment } from "@/services/paymentService";
+
 
 type Category = "All" | "Electronics" | "Home" | "Fashion" | "Accessories";
 type PaymentMethod = "card" | "pix";
@@ -29,18 +35,22 @@ type CartItem = {
 
 type Tab = "Start" | "Categories" | "Cart" | "Profile";
 
-const cats:{
-    label:Category;icon:keyof typeof Ionicons.glyphMap}[]=[
-    {label:"All",icon:"grid-outline"},
-    {label:"Electronics",icon:"headset-outline"},
-    {label:"Home",icon:"home-outline"},
-    {label:"Fashion",icon:"shirt-outline"},
-    {label:"Accessories",icon:"watch-outline"}
-];
+const cats:{label:Category;icon:keyof typeof Ionicons.glyphMap}[]=[
+        {label:"All",icon:"grid-outline"},
+        {label:"Electronics",icon:"headset-outline"},
+        {label:"Home",icon:"home-outline"},
+        {label:"Fashion",icon:"shirt-outline"},
+        {label:"Accessories",icon:"watch-outline"}
+    ];
 const money=(n:number)=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const CART_STORAGE_KEY = "@shopora/cart";
 
-export default function App(){
+function ShoporaApp(){
+    const { isAuthenticated, loading:authLoading, login, logout, } = useAuth();
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+    const [loginLoading, setLoginLoading] = useState(false);
+    const [loginError, setLoginError] = useState("");
     const [products, setProducts] = useState<ShoporaProduct[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [tab,setTab]=useState<Tab>("Start");
@@ -55,9 +65,60 @@ export default function App(){
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
     const [fullName, setFullName] = useState("");
     const [cep, setCep] = useState("");
-    const [address, setAddress] = useState("");
-    const [cityState, setCityState] = useState("");
+    const [street, setStreet] = useState("");
+    const [number, setNumber] = useState("");
+    const [city, setCity] = useState("");
+    const [state, setState] = useState("");
     const [orderConfirmed, setOrderConfirmed] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
+    const handleLogin = async () => {
+        if (!loginEmail.trim() || !loginPassword) {
+            setLoginError("Enter your email and password.");
+            return;
+        }
+        try {
+            setLoginLoading(true);
+            setLoginError("");
+
+            await login({
+            email: loginEmail.trim(),
+            password: loginPassword,
+            });
+
+            setLoginPassword("");
+            setLoginEmail("");
+
+            Alert.alert(
+            "Login successful",
+            "You have signed in to your Shopora account."
+            );
+        } catch (error) {
+            console.error("SHOPORA LOGIN ERROR:", error);
+            setLoginError(
+            error instanceof Error
+                ? "Unable to sign in. Please check your credentials and try again."
+                : "An unexpected error occurred."
+            );
+        } finally {
+            setLoginLoading(false);
+        }
+    };
+    const handleLogout = async () => {
+        try {
+            await logout();
+            Alert.alert(
+            "Logged out successfully",
+            "You have signed out of your Shopora account."
+            );
+        } catch (error) {
+            console.error("SHOPORA LOGOUT ERROR:", error);
+
+            Alert.alert(
+            "Error",
+            "Unable to sign out of the account."
+            );
+        }
+    };
     const getVariant = (
     product: Product,
     variantId: number
@@ -232,18 +293,34 @@ export default function App(){
             return false;
         }
 
-        if (!address.trim()) {
+        if (!street.trim()) {
             Alert.alert(
             "Missing information",
-            "Please enter your address."
+            "Please enter your street."
             );
             return false;
         }
 
-        if (!cityState.trim()) {
+        if (!number.trim()) {
             Alert.alert(
             "Missing information",
-            "Please enter your city and state."
+            "Please enter your address number."
+            );
+            return false;
+        }
+
+        if (!city.trim()) {
+            Alert.alert(
+            "Missing information",
+            "Please enter your city."
+            );
+            return false;
+        }
+
+        if (!state.trim()) {
+            Alert.alert(
+            "Missing information",
+            "Please enter your state."
             );
             return false;
         }
@@ -266,20 +343,94 @@ export default function App(){
 
         return true;
     };
-    const confirmOrder = () => {
+    const confirmOrder = async () => {
         if (!validateCheckout()) {
             return;
         }
-        setCart([]);
 
-        setFullName("");
-        setCep("");
-        setAddress("");
-        setCityState("");
-        setPaymentMethod(null);
+        try {
+            setCheckoutLoading(true);
 
-        setCheckout(false);
-        setOrderConfirmed(true);
+            // 1. Sincronize mobile cart with backend cart
+            for (const item of cart) {
+            await addItemToBackendCart(
+                item.variantId,
+                item.quantity
+            );
+            }
+
+            // 2. Create delivery address
+            const createdAddress = await createAddress({
+                label: "Principal",
+                recipient_name: fullName.trim(),
+                postal_code: cep.trim(),
+                street: street.trim(),
+                number: number.trim(),
+                complement: "",
+                district: "",
+                city: city.trim(),
+                state: state.trim().toUpperCase(),
+                country: "BR",
+                is_default: true,
+            });
+
+            console.log(
+            "ADDRESS CREATED:",
+            createdAddress
+            );
+
+            // 3. Create order using backend cart
+            const order = await createOrderFromCart({
+            address_id: createdAddress.id,
+            });
+
+            console.log(
+            "ORDER CREATED:",
+            order
+            );
+
+            const payment = await createPayment({
+                order_id: order.id,
+                provider: "asaas",
+                method:
+                    paymentMethod === "pix"
+                    ? "pix"
+                    : "credit_card",
+            });
+
+            console.log(
+            "PAYMENT CREATED:",
+            payment
+            );
+
+            // 4. Clean the cart after everything works out
+            setCart([]);
+
+            setFullName("");
+            setCep("");
+            setStreet("");
+            setNumber("");
+            setCity("");
+            setState("");
+            setPaymentMethod(null);
+
+            setCheckout(false);
+            setOrderConfirmed(true);
+        } catch (error) {
+            console.error(
+            "CHECKOUT ERROR:",
+            error
+            );
+
+            Alert.alert(
+            "Erro no checkout",
+            error instanceof Error
+                ? error.message
+                : "The order could not be completed."
+            );
+        } finally {
+            setCheckoutLoading(false);
+        }
     };
     const Header=(
         {title,subtitle}:{title:string;subtitle?:string})=>
@@ -596,43 +747,299 @@ export default function App(){
         </ScrollView>
     );
     const renderProfile = () => {
-        <ScrollView contentContainerStyle={styles.page}>
-            <Header title="My account" subtitle="Your Shopora experience." />
-            <View style={styles.profileCard}>
-                <View style={styles.avatar}>
-                    <Ionicons name="person-outline" size={29} color={C.ink} />
-                </View>
-                <View>
-                    <Text style={styles.categoryTitle}>
-                        Hi, client!
-                    </Text>
-                    <Text style={styles.smallMuted}>
-                        Log in to track your orders.
-                    </Text>
+        if (authLoading) {
+            return (
+            <View style={styles.page}>
+                <View style={styles.empty}>
+                <ActivityIndicator
+                    size="large"
+                    color={C.ink}
+                />
+
+                <Text style={styles.emptyText}>
+                    Carregando sua conta...
+                </Text>
                 </View>
             </View>
-                {
-                    [
-                        { i: "receipt-outline" as const, t: "My orders" }, 
-                        { i: "heart-outline" as const, t: "Favorites" },
-                        { i: "location-outline" as const, t: "Addresses" }, 
-                        { i: "card-outline" as const, t: "Payments" }, 
-                        { i: "settings-outline" as const, t: "Settings" }
-                    ].map(r => 
-                        <Pressable key={r.t} style={styles.profileLink} onPress={() => 
-                            r.t === "Favorites" ? Alert.alert("Favorites", favorite.length ? products.filter(p => 
-                                favorite.includes(p.id)).map(p => p.name).join(", ") : 
-                                "You haven't saved any products yet.") : 
-                                Alert.alert(r.t, "Esta área será conectada à API Django do Shopora.")}>
-                                <Ionicons name={r.i} size={20} color={C.ink} />
-                                <Text style={{ flex: 1, color: C.ink, fontSize: 13 }}>
-                                    {r.t}
-                                </Text>
-                                <Ionicons name="chevron-forward" size={18} color={C.muted} />
-                        </Pressable>
-                    )
-                }
-        </ScrollView>;
+            );
+        }
+
+        if (isAuthenticated) {
+            return (
+            <ScrollView
+                style={styles.page}
+                contentContainerStyle={{
+                paddingBottom: 32,
+                }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <Text style={styles.sectionTitle}>
+                My Account
+                </Text>
+
+                <View
+                style={{
+                    alignItems: "center",
+                    paddingVertical: 32,
+                }}
+                >
+                <View
+                    style={{
+                    width: 84,
+                    height: 84,
+                    borderRadius: 42,
+                    backgroundColor: C.card,
+                    borderWidth: 1,
+                    borderColor: C.border,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 16,
+                    }}
+                >
+                    <Ionicons
+                    name="person-outline"
+                    size={38}
+                    color={C.ink}
+                    />
+                </View>
+
+                <Text style={styles.emptyTitle}>
+                    Welcome to Shopora
+                </Text>
+
+                <Text
+                    style={[
+                    styles.emptyText,
+                    {
+                        textAlign: "center",
+                        marginTop: 8,
+                    },
+                    ]}
+                >
+                    You are signed in to your account.
+                </Text>
+                </View>
+
+                <View
+                style={{
+                    backgroundColor: C.card,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: C.border,
+                    padding: 18,
+                    marginBottom: 24,
+                }}
+                >
+                <View
+                    style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 12,
+                    }}
+                >
+                    <Ionicons
+                    name="shield-checkmark-outline"
+                    size={22}
+                    color={C.ink}
+                    />
+
+                    <Text
+                    style={{
+                        color: C.ink,
+                        fontSize: 15,
+                        fontWeight: "600",
+                        marginLeft: 12,
+                    }}
+                    >
+                    Account status
+                    </Text>
+                </View>
+
+                <Text style={styles.emptyText}>
+                    You are authenticated.
+                </Text>
+                </View>
+
+                <Pressable
+                style={styles.primary}
+                onPress={handleLogout}
+                >
+                <Text style={styles.primaryText}>
+                    Sign out
+                </Text>
+
+                <Ionicons
+                    name="log-out-outline"
+                    size={18}
+                    color={C.white}
+                />
+                </Pressable>
+            </ScrollView>
+            );
+        }
+
+        return (
+            <ScrollView
+            style={styles.page}
+            contentContainerStyle={{
+                paddingBottom: 32,
+            }}
+            keyboardShouldPersistTaps="handled"
+            >
+            <Text style={styles.sectionTitle}>
+                My Account
+            </Text>
+
+            <View
+                style={{
+                alignItems: "center",
+                paddingTop: 24,
+                paddingBottom: 28,
+                }}
+            >
+                <Ionicons
+                name="person-circle-outline"
+                size={72}
+                color={C.ink}
+                />
+
+                <Text
+                style={[
+                    styles.emptyTitle,
+                    { marginTop: 12 },
+                ]}
+                >
+                Welcome to Shopora
+                </Text>
+
+                <Text
+                style={[
+                    styles.emptyText,
+                    {
+                    textAlign: "center",
+                    marginTop: 8,
+                    },
+                ]}
+                >
+                Sign in to access your account and continue
+                shopping.
+                </Text>
+            </View>
+
+            <View
+                style={{
+                backgroundColor: C.card,
+                borderWidth: 1,
+                borderColor: C.border,
+                borderRadius: 16,
+                padding: 18,
+                }}
+            >
+                <Text
+                style={{
+                    color: C.ink,
+                    fontSize: 15,
+                    fontWeight: "600",
+                    marginBottom: 18,
+                }}
+                >
+                Sign in
+                </Text>
+
+                <Text style={styles.inputLabel}>
+                Email
+                </Text>
+
+                <TextInput
+                style={styles.input}
+                value={loginEmail}
+                onChangeText={setLoginEmail}
+                placeholder="you@example.com"
+                placeholderTextColor={C.muted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                />
+
+                <Text
+                style={[
+                    styles.inputLabel,
+                    { marginTop: 16 },
+                ]}
+                >
+                Password
+                </Text>
+
+                <TextInput
+                style={styles.input}
+                value={loginPassword}
+                onChangeText={setLoginPassword}
+                placeholder="Enter your password"
+                placeholderTextColor={C.muted}
+                secureTextEntry
+                autoCapitalize="none"
+                autoComplete="current-password"
+                onSubmitEditing={handleLogin}
+                returnKeyType="go"
+                />
+
+                {!!loginError && (
+                <Text
+                    style={{
+                    color: "#B42318",
+                    fontSize: 13,
+                    marginTop: 12,
+                    lineHeight: 19,
+                    }}
+                >
+                    {loginError}
+                </Text>
+                )}
+
+                <Pressable
+                style={[
+                    styles.primary,
+                    {
+                    marginTop: 24,
+                    opacity: loginLoading ? 0.6 : 1,
+                    },
+                ]}
+                onPress={handleLogin}
+                disabled={loginLoading}
+                >
+                {loginLoading ? (
+                    <ActivityIndicator color={C.white} />
+                ) : (
+                    <>
+                    <Text style={styles.primaryText}>
+                        Sign in
+                    </Text>
+
+                    <Ionicons
+                        name="arrow-forward"
+                        size={18}
+                        color={C.white}
+                    />
+                    </>
+                )}
+                </Pressable>
+            </View>
+
+            <Text
+                style={{
+                color: C.muted,
+                fontSize: 12,
+                textAlign: "center",
+                marginTop: 18,
+                lineHeight: 18,
+                }}
+            >
+                Your account is authenticated securely through
+                the Shopora API.
+            </Text>
+            </ScrollView>
+        );
     };
     const renderDetail = () => {
         if (!selected) {
@@ -812,33 +1219,55 @@ export default function App(){
                 Delivery address
             </Text>
             <TextInput
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Full name"
-                placeholderTextColor={C.muted}
-                style={styles.input}
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Full name"
+            placeholderTextColor={C.muted}
+            style={styles.input}
             />
+
             <TextInput
-                value={cep}
-                onChangeText={setCep}
-                placeholder="CEP"
-                placeholderTextColor={C.muted}
-                keyboardType="numeric"
-                style={styles.input}
+            value={cep}
+            onChangeText={setCep}
+            placeholder="CEP"
+            placeholderTextColor={C.muted}
+            keyboardType="numeric"
+            style={styles.input}
             />
+
             <TextInput
-                value={address}
-                onChangeText={setAddress}
-                placeholder="Address and number"
-                placeholderTextColor={C.muted}
-                style={styles.input}
+            value={street}
+            onChangeText={setStreet}
+            placeholder="Street"
+            placeholderTextColor={C.muted}
+            style={styles.input}
             />
+
             <TextInput
-                value={cityState}
-                onChangeText={setCityState}
-                placeholder="City / State"
-                placeholderTextColor={C.muted}
-                style={styles.input}
+            value={number}
+            onChangeText={setNumber}
+            placeholder="Number"
+            placeholderTextColor={C.muted}
+            keyboardType="numeric"
+            style={styles.input}
+            />
+
+            <TextInput
+            value={city}
+            onChangeText={setCity}
+            placeholder="City"
+            placeholderTextColor={C.muted}
+            style={styles.input}
+            />
+
+            <TextInput
+            value={state}
+            onChangeText={setState}
+            placeholder="State"
+            placeholderTextColor={C.muted}
+            autoCapitalize="characters"
+            maxLength={2}
+            style={styles.input}
             />
             <Text
             style={[
@@ -919,10 +1348,23 @@ export default function App(){
                 <Text style={styles.smallMuted}>
                     Delivery calculated after address validation.
                 </Text>
-                <Pressable style={styles.primary} onPress={confirmOrder}>
-                    <Text style={styles.primaryText}>
+                <Pressable
+                    style={[
+                        styles.primary,
+                        {
+                        opacity: checkoutLoading ? 0.6 : 1,
+                        },
+                    ]}
+                    onPress={confirmOrder}
+                    disabled={checkoutLoading}
+                >
+                    {checkoutLoading ? (
+                        <ActivityIndicator color={C.white} />
+                    ) : (
+                        <Text style={styles.primaryText}>
                         Confirm order
-                    </Text>
+                        </Text>
+                    )}
                 </Pressable>
             </View>
         </ScrollView>;
@@ -984,6 +1426,7 @@ export default function App(){
             </View>
         </View>
     );
+
     let content = orderConfirmed
         ? renderOrderSuccess()
         : checkout
@@ -1134,4 +1577,12 @@ export default function App(){
             }
         </SafeAreaView>
     );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ShoporaApp />
+    </AuthProvider>
+  );
 }

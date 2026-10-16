@@ -397,17 +397,23 @@ export const styles = StyleSheet.create({
         color: C.muted, 
         marginTop: 13 
     }, 
-    input: { 
-        borderWidth: 1, 
-        borderColor: C.line, 
-        backgroundColor: C.white, 
-        borderRadius: 12, 
-        paddingHorizontal: 13, 
-        paddingVertical: 14, 
-        fontSize: 12, 
-        color: C.ink, 
-        marginTop: 10 
-    }, 
+    inputLabel: {
+        color: C.ink,
+        fontSize: 13,
+        fontWeight: "500",
+        marginBottom: 8,
+    },
+
+    input: {
+        backgroundColor: C.white,
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 13,
+        color: C.ink,
+        fontSize: 14,
+    },
     payment: { 
         flexDirection: "row", 
         alignItems: "center", 
