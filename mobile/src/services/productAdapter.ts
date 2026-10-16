@@ -1,4 +1,4 @@
-import { ApiProduct, ProductVariant } from "../types/product";
+import { ApiProduct, ProductVariant } from "@/types/product";
 
 export type ShoporaProduct = {
   id: string;

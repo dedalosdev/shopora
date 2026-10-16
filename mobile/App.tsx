@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { SafeAreaView, ScrollView, View, Text, TextInput, Image, Pressable, StyleSheet, Alert, StatusBar, ActivityIndicator } from "react-native";
+import { SafeAreaView, ScrollView, View, Text, TextInput, Image, Pressable, Alert, StatusBar, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { C } from "./src/styles/constants";
 import { styles } from "./src/styles/styles";
@@ -154,7 +154,7 @@ export default function App(){
                         <Ionicons name="arrow-forward" size={14} color={C.white} />
                     </Pressable>
                 </View>
-                <Image source={{ uri: "https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?w=800" }} style={styles.heroImage} />
+                <Image source={require("./src/assets/photo-1490312278390-ab64016e0aa9.jpeg")} style={styles.heroImage} />
             </View>
             <View style={styles.sectionHead}>
                 <Text style={styles.sectionTitle}>
@@ -454,15 +454,15 @@ export default function App(){
         return (
             <View
                 style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "#F7F7F5",
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#F7F7F5",
                 }}
             >
                 <ActivityIndicator size="large" color="#172126" />
                 <Text style={{ marginTop: 12 }}>
-                Loading products...
+                    Loading products...
                 </Text>
             </View>
         );
@@ -471,9 +471,12 @@ export default function App(){
     return (
         <SafeAreaView style={styles.safe}>
             <StatusBar barStyle="dark-content" backgroundColor={C.bg}/>
-            <View style={styles.app}>{content}</View>
+            <View style={styles.app}>
+                {content}
+            </View>
             {
-                !selected&&!checkout&&<View style={styles.tabs}>{
+                !selected&&!checkout&&<View style={styles.tabs}>
+                {
                     (
                         [
                             {t:"Start",i:"home-outline"},
@@ -482,13 +485,18 @@ export default function App(){
                             {t:"Profile",i:"person-outline"}
                         ] as const
                     ).map(
-                        x=><Pressable key={x.t} style={styles.tab} onPress={()=>setTab(x.t)}>
-                        <View style={[styles.tabIcon,tab===x.t&&styles.tabIconActive]}><Ionicons name={x.i} size={19} color={tab===x.t?C.white:C.muted}/></View>
-                        <Text style={[styles.tabLabel,tab===x.t&&{color:C.ink,fontWeight:"800"}]}>{x.t}</Text>
+                        x=>
+                        <Pressable key={x.t} style={styles.tab} onPress={()=>setTab(x.t)}>
+                            <View style={[styles.tabIcon,tab===x.t&&styles.tabIconActive]}>
+                                <Ionicons name={x.i} size={19} color={tab===x.t?C.white:C.muted}/>
+                            </View>
+                            <Text style={[styles.tabLabel,tab===x.t&&{color:C.ink,fontWeight:"800"}]}>
+                                {x.t}
+                            </Text>
                         </Pressable>
                     )
                 }
-            </View>
+                </View>
             }
         </SafeAreaView>
     );
