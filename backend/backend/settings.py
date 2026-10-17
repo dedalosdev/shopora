@@ -32,6 +32,11 @@ ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.
 # Customized User class
 AUTH_USER_MODEL = "accounts.User"
 
+# ASAAS Settings
+ASAAS_API_KEY = os.getenv("ASAAS_API_KEY")
+ASAAS_API_URL = os.getenv("ASAAS_API_URL", default="https://api-sandbox.asaas.com/v3",)
+ASAAS_WEBHOOK_TOKEN = os.getenv("ASAAS_WEBHOOK_TOKEN")
+
 # Application definition
 
 INSTALLED_APPS = [

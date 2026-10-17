@@ -351,7 +351,7 @@ function ShoporaApp(){
         try {
             setCheckoutLoading(true);
 
-            // 1. Sincronize mobile cart with backend cart
+            // 1. Sincronizar carrinho mobile com o carrinho do backend
             for (const item of cart) {
             await addItemToBackendCart(
                 item.variantId,
@@ -359,19 +359,19 @@ function ShoporaApp(){
             );
             }
 
-            // 2. Create delivery address
+            // 2. Criar endereço
             const createdAddress = await createAddress({
-                label: "Principal",
-                recipient_name: fullName.trim(),
-                postal_code: cep.trim(),
-                street: street.trim(),
-                number: number.trim(),
-                complement: "",
-                district: "",
-                city: city.trim(),
-                state: state.trim().toUpperCase(),
-                country: "BR",
-                is_default: true,
+            label: "Principal",
+            recipient_name: fullName.trim(),
+            postal_code: cep.trim(),
+            street: street.trim(),
+            number: number.trim(),
+            complement: "",
+            district: "",
+            city: city.trim(),
+            state: state.trim().toUpperCase(),
+            country: "BR",
+            is_default: true,
             });
 
             console.log(
@@ -379,7 +379,7 @@ function ShoporaApp(){
             createdAddress
             );
 
-            // 3. Create order using backend cart
+            // 3. Criar pedido
             const order = await createOrderFromCart({
             address_id: createdAddress.id,
             });
@@ -389,13 +389,14 @@ function ShoporaApp(){
             order
             );
 
+            // 4. Criar Checkout Asaas
             const payment = await createPayment({
-                order_id: order.id,
-                provider: "asaas",
-                method:
-                    paymentMethod === "pix"
-                    ? "pix"
-                    : "credit_card",
+            order_id: order.id,
+            provider: "asaas",
+            method:
+                paymentMethod === "pix"
+                ? "pix"
+                : "credit_card",
             });
 
             console.log(
@@ -403,19 +404,21 @@ function ShoporaApp(){
             payment
             );
 
-            // 4. Clean the cart after everything works out
-            setCart([]);
+            // 5. Verificar se recebemos a URL
+            const checkoutUrl =
+            payment.payment.checkout_url;
 
-            setFullName("");
-            setCep("");
-            setStreet("");
-            setNumber("");
-            setCity("");
-            setState("");
-            setPaymentMethod(null);
+            if (!checkoutUrl) {
+            throw new Error(
+                "O Asaas não retornou a URL do checkout."
+            );
+            }
 
-            setCheckout(false);
-            setOrderConfirmed(true);
+            console.log(
+            "ASAAS CHECKOUT URL:",
+            checkoutUrl
+            );
+
         } catch (error) {
             console.error(
             "CHECKOUT ERROR:",
@@ -426,7 +429,7 @@ function ShoporaApp(){
             "Erro no checkout",
             error instanceof Error
                 ? error.message
-                : "The order could not be completed."
+                : "Não foi possível finalizar o pedido."
             );
         } finally {
             setCheckoutLoading(false);
