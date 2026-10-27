@@ -13,29 +13,24 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mpumej$ps&7dpf2vn=j%ch)yhosz2noaxtdv#p7r$l9r#6wnb$'
+SECRET_KEY = 'django-insecure-4linyx-8wmgj6_oet*of42vr(%w)+^jb%y_^nbj)l7gob&d!x3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+DEBUG = True
 
-ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host]
+ALLOWED_HOSTS = []
 
-# Customized User class
-AUTH_USER_MODEL = "accounts.User"
-
-# ASAAS Settings
-ASAAS_API_KEY = os.getenv("ASAAS_API_KEY")
-ASAAS_API_URL = os.getenv("ASAAS_API_URL", default="https://api-sandbox.asaas.com/v3",)
-ASAAS_WEBHOOK_TOKEN = os.getenv("ASAAS_WEBHOOK_TOKEN")
 
 # Application definition
 
@@ -47,19 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    "rest_framework_simplejwt", 
-    "django_filters", 
-    "drf_spectacular",
-    "accounts", 
-    "catalog", "inventory", 
-    "cart", 
-    "orders",
-    "payments", 
-    "shipping", 
-    "coupons",
-    "notifications",
-    "storefront",
-    "common",
+    'store',
 ]
 
 MIDDLEWARE = [
@@ -98,12 +81,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -142,20 +121,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / "media"
-
 STATIC_URL = 'static/'
 
-# REST_FRAMEWORK Configurations
-REST_FRAMEWORK = {
- "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
- "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
- "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend", "rest_framework.filters.SearchFilter", "rest_framework.filters.OrderingFilter"],
- "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
- "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
- "PAGE_SIZE": 20,
-}
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -167,7 +136,25 @@ MAILERS = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = [
-    "http://localhost:3000",                   
+    'http://localhost:3000',
 ]
 
-SPECTACULAR_SETTINGS = {"TITLE":"Shopora API", "DESCRIPTION":"REST API for the shopora platform", "VERSION":"1.0.0"}
+
+# REST_FRAMEWORK Configurations
+REST_FRAMEWORK = {
+ "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+ "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+ "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend", "rest_framework.filters.SearchFilter", "rest_framework.filters.OrderingFilter"],
+ "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+ "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+ "PAGE_SIZE": 20,
+}
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}

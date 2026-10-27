@@ -2,17 +2,8 @@
 Shopora is an open-source e-commerce platform featuring a React web interface, a React Native mobile app, a Python/Django/DjangoRestFramework backend and PostgreSQL database. Designed for learning, personal use, and commercial projects, it provides a flexible foundation for building and customizing online stores.
 
 ## Included
-- `accounts`: customer profile and addresses
-- `catalog`: categories, products, variants and images
-- `inventory`: stock balances and movements
-- `cart`: shopping carts and items
-- `orders`: orders and order items
-- `payments`: payment records and provider webhooks
-- `shipping`: shipments
-- `coupons`: coupon validation and redemption
-- `notifications`: notification records
-- `storefront`: public store settings and banners
-- `common`: shared utilities and health endpoint
+- `store`: business rules from store
+
 
 # database settings
 psql postgres
