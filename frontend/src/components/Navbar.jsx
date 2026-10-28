@@ -1,7 +1,7 @@
 import {Link, useNavigate} from 'react-router-dom';
 import {useCart} from '../context/CartContext.jsx';
 import { clearTokens, getAccessToken } from '../utils/auth.js';
-import { ShoppingBag, Menu, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { ShoppingCart, Menu, LogIn, LogOut, UserPlus } from 'lucide-react';
 
 function Navbar() {
     const {cartItems} = useCart();
@@ -50,7 +50,7 @@ function Navbar() {
                 )}                
                 <nav class="md:ml-auto flex flex-wrap items-center text-base justify-center">
                     <a href='/cart' class='hover:text-gray-900'>
-                        <ShoppingBag size={19} strokeWidth={1.8} />
+                        <ShoppingCart size={19} strokeWidth={1.8} />
                         {cartCount > 0 && (
                             <span className='absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full px-2'>
                                 {cartCount}
