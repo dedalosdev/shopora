@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../utils/auth";
 import { useCart } from "../context/CartContext";
+import { CreditCard } from "lucide-react";
 
 
 function CheckoutPage() {
@@ -86,7 +87,7 @@ function CheckoutPage() {
           </select>
 
           <button className="w-full bg-green-600 text-white py-2 rounded">
-            Place Order
+            <CreditCard size={14} /> Place Order
           </button>
         </form>
       </div>

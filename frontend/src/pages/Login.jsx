@@ -40,7 +40,7 @@ function Login() {
         <form onSubmit={handleSubmit} className="space-y-3">
           <input name="username" onChange={handleChange} value={form.username} placeholder="Username" required className="w-full p-2 border rounded"/>
           <input name="password" type="password" onChange={handleChange} value={form.password} placeholder="Password" required className="w-full p-2 border rounded"/>
-          <button className="w-full bg-blue-600 text-white py-2 rounded">Login</button>
+          <button className="w-full bg-black text-white py-2 rounded">Login</button>
         </form>
         {msg && <p className="mt-3 text-sm">{msg}</p>}
         <div className="mt-4 text-sm">
