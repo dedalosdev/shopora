@@ -10,7 +10,7 @@ urlpatterns = [
     path("token/", TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path("token/refresh/", TokenRefreshView.as_view(), name='token_refresh'),
     path('products/', views.get_products),
-    path('products/<int:pk>/', views.get_product),
+    path('product/<int:pk>/', views.get_product),
     path('categories/', views.get_categories),
     path('cart/', views.get_cart),
     path('cart/add/', views.add_to_cart),
