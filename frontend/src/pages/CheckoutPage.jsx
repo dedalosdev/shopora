@@ -45,7 +45,7 @@ function CheckoutPage() {
 
   return (
     <div className="pt-20 p-6">
-      <div className="max-w-lg mx-auto bg-white p-6 shadow rounded">
+      <div className="max-w-lg mx-auto bg-white p-6 rounded">
         <h1 className="text-2xl font-bold mb-4">Checkout</h1>
 
         <form onSubmit={handleSubmit} className="space-y-3">

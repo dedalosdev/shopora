@@ -1,3 +1,4 @@
+import { Wallet } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
 
@@ -57,7 +58,7 @@ function CartPage() {
                             <h2 className="text-xl font-bold">Total:</h2>
                             <p className="text-xl font-semibold">${total.toFixed(2)}</p>
                             <Link to="/checkout" className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition duration-300">
-                                Proceed to Checkout
+                                <Wallet size={14} /> Proceed to Checkout
                             </Link>
                         </div>
                     </div>
