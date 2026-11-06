@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
-from django.core.exceptions import ImproperlyConfigured
 
 from dotenv import load_dotenv
 from datetime import timedelta
